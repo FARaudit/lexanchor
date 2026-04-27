@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase-server";
 import FollowUpForm from "./follow-up-form";
+import SaveClauseButton from "./save-clause-button";
 
 type Params = { id: string };
 
@@ -72,9 +73,19 @@ export default async function AnalysisResultPage({
     <div className="min-h-screen">
       <header className="border-b border-border px-6 md:px-10 py-5 flex items-center justify-between">
         <Link href="/dashboard" className="font-display text-2xl text-text">LexAnchor</Link>
-        <Link href="/analyze" className="text-sm text-gold hover:text-gold-dim font-mono uppercase tracking-wider">
-          + New analysis
-        </Link>
+        <div className="flex items-center gap-6">
+          {analysis.status === "complete" && (
+            <a
+              href={`/api/export-pdf?id=${analysis.id}`}
+              className="text-sm text-text-2 hover:text-gold font-mono uppercase tracking-wider"
+            >
+              Download PDF
+            </a>
+          )}
+          <Link href="/analyze" className="text-sm text-gold hover:text-gold-dim font-mono uppercase tracking-wider">
+            + New analysis
+          </Link>
+        </div>
       </header>
 
       <main className="px-6 md:px-10 py-12 md:py-16 max-w-5xl mx-auto">
@@ -168,7 +179,14 @@ export default async function AnalysisResultPage({
                 <p className="text-text-2 italic">No clauses surfaced.</p>
               ) : (
                 <div className="space-y-5">
-                  {clauses.map((c, i) => <ClauseCard key={i} clause={c} />)}
+                  {clauses.map((c, i) => (
+                    <ClauseCard
+                      key={i}
+                      clause={c}
+                      analysisId={Number(analysis.id)}
+                      docType={String(analysis.document_type ?? "")}
+                    />
+                  ))}
                 </div>
               )}
               {omissions.length > 0 && (
@@ -257,14 +275,34 @@ function RedFlagCard({ flag }: { flag: RedFlag }) {
   );
 }
 
-function ClauseCard({ clause }: { clause: ClauseItem }) {
+function ClauseCard({
+  clause,
+  analysisId,
+  docType
+}: {
+  clause: ClauseItem;
+  analysisId: number;
+  docType: string;
+}) {
   return (
     <div className="border border-border bg-surface p-5">
-      <div className="flex items-baseline gap-3 flex-wrap">
-        <p className="font-display text-lg text-text">{clause.name}</p>
-        {clause.citation && (
-          <span className="font-mono text-xs text-text-3">{clause.citation}</span>
-        )}
+      <div className="flex items-baseline gap-3 flex-wrap justify-between">
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <p className="font-display text-lg text-text">{clause.name}</p>
+          {clause.citation && (
+            <span className="font-mono text-xs text-text-3">{clause.citation}</span>
+          )}
+        </div>
+        <SaveClauseButton
+          payload={{
+            analysis_id: analysisId,
+            clause_name: clause.name,
+            clause_text: clause.what_it_says ?? null,
+            doc_type: docType || null,
+            explanation: clause.why_it_matters ?? null,
+            citation: clause.citation ?? null
+          }}
+        />
       </div>
       {clause.what_it_says && (
         <p className="mt-2 text-text-2 leading-relaxed">{clause.what_it_says}</p>
