@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase-server";
+import FollowUpForm from "./follow-up-form";
 
 type Params = { id: string };
 
@@ -185,6 +186,14 @@ export default async function AnalysisResultPage({
             {/* Overview */}
             <Section eyebrow="Overview" title="Document at a glance">
               <OverviewGrid data={overviewJson} />
+            </Section>
+
+            {/* Follow-up Q&A */}
+            <Section eyebrow="Ask" title="Follow-up question">
+              <p className="text-text-2 mb-5 leading-relaxed max-w-2xl">
+                Ask anything about this analysis — clause meaning, negotiation framing, or how a specific term might apply in your situation. Information only.
+              </p>
+              <FollowUpForm analysisId={Number(analysis.id)} />
             </Section>
 
             {/* UPL footer */}

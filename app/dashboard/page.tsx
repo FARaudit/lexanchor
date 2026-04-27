@@ -41,6 +41,7 @@ export default async function DashboardPage() {
           <nav className="hidden md:flex gap-6 text-sm text-text-2">
             <Link href="/dashboard" className="text-text">Dashboard</Link>
             <Link href="/analyze" className="hover:text-text">Analyze</Link>
+            <Link href="/clause-library" className="hover:text-text">Clause Library</Link>
           </nav>
         </div>
         <div className="text-right">
