@@ -110,6 +110,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Best-effort intelligence-corpus write — every analysis teaches the engine
+    // what risk flags fire on what clause types.
+    try {
+      const flags = ((result.risks.json as Record<string, unknown>).red_flags as Array<{ severity?: string; flag?: string }> | undefined) ?? [];
+      const flagLabels = flags.filter((f) => f && typeof f.flag === "string").map((f) => `${f.severity ?? "?"}: ${f.flag}`);
+      if (flagLabels.length > 0) {
+        await supabase.from("la_intelligence_corpus").insert({
+          user_id: user.id,
+          analysis_id: row.id,
+          clause_type: result.overview.json.document_type || documentTypeHint || null,
+          risk_flags: flagLabels.slice(0, 20),
+          metadata: { recommendation: result.recommendation, risk_score: result.risk_score }
+        });
+      }
+    } catch {
+      /* silent — corpus is best-effort */
+    }
+
     return NextResponse.json({
       analysisId: row.id,
       status: "complete",
