@@ -1,168 +1,182 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-const FAQ = [
+export const metadata: Metadata = {
+  title: "LexAnchor Pricing — Legal Intelligence",
+  description:
+    "Unlimited contract reviews. Individual $99/mo · Professional $199/mo · Business $499/mo · Law Firm $999/mo. First contract free."
+};
+
+const tiers = [
   {
-    q: "Is this legal advice?",
-    a: "No. LexAnchor provides information only — descriptive analysis of what your contract says and what risks may exist. We do not represent you, take instructions from you, or form an attorney-client relationship. For material decisions, consult a licensed attorney."
+    name: "Individual",
+    price: "$99",
+    term: "Month-to-month · cancel anytime",
+    featured: false,
+    features: [
+      "10 contracts / month",
+      "P0/P1/P2 risk prioritization",
+      "Plain-English summaries",
+      "All contract types",
+      "PDF export",
+      "Renewal alerts"
+    ],
+    cta: { text: "Start free", href: "/signup", style: "outline" }
   },
   {
-    q: "What document types do you support?",
-    a: "Employment offers, leases, NDAs, freelance contracts, terms of service, service agreements, and most other US-style commercial contracts. The analyzer adapts to whatever it reads — if your document doesn't match a common template, the engine still returns a clause-by-clause breakdown."
+    name: "Professional",
+    price: "$199",
+    term: "Month-to-month · most popular",
+    featured: true,
+    features: [
+      "Unlimited contracts",
+      "Side-by-side document compare",
+      "Negotiation playbook export",
+      "Custom clause flagging",
+      "Clause library",
+      "Priority processing",
+      "API access"
+    ],
+    cta: { text: "Start free", href: "/signup", style: "primary" }
   },
   {
-    q: "How accurate is the analysis?",
-    a: "Senior-attorney-grade — but not a substitute for one. The model reads every page and surfaces risks a careful reader should not miss. It does not interpret jurisdiction-specific case law, predict outcomes, or replace a litigator. Treat it as a smart pre-read before your attorney call."
+    name: "Business",
+    price: "$499",
+    term: "Month-to-month · 5 seats",
+    featured: false,
+    features: [
+      "Everything in Professional",
+      "5 user seats",
+      "Team-shared library",
+      "SSO / SAML",
+      "Custom playbooks",
+      "Audit log",
+      "Dedicated onboarding"
+    ],
+    cta: { text: "Contact us", href: "mailto:jose@lexanchor.ai?subject=Business%20plan", style: "outline" }
   },
   {
-    q: "What about data privacy?",
-    a: "Documents are processed in-memory and not retained beyond the analysis. The structured findings (clause names, risk levels, plain-English summaries) are stored under your account so you can revisit them. No third-party training. No cross-customer data sharing."
-  },
-  {
-    q: "Can I cancel anytime?",
-    a: "Yes. Month-to-month, no commitment. Annual pricing available — email support@lexanchor.ai."
-  },
-  {
-    q: "Do you support languages other than English?",
-    a: "English-only at launch. Spanish coming next."
+    name: "Law Firm",
+    price: "$999",
+    term: "Month-to-month · 25 seats",
+    featured: false,
+    features: [
+      "Everything in Business",
+      "25 attorney seats",
+      "Matter-level organization",
+      "Conflict checking",
+      "Client portal",
+      "White-label option",
+      "Custom training"
+    ],
+    cta: { text: "Contact us", href: "mailto:jose@lexanchor.ai?subject=Law%20Firm%20plan", style: "outline" }
   }
 ];
 
+const BG = "#06040f";
+const SURFACE = "#09071a";
+const TEXT_1 = "#e0d8f8";
+const TEXT_2 = "#5a4e88";
+const TEXT_3 = "#3a2e60";
+const PURPLE = "#7045e8";
+const PURPLE_LIGHT = "#9468f5";
+
 export default function PricingPage() {
   return (
-    <main>
-      <header className="px-6 md:px-10 py-6 flex items-center justify-between border-b border-border">
-        <Link href="/" className="font-display text-xl text-text tracking-tight">LexAnchor</Link>
-        <nav className="flex items-center gap-6 text-sm">
-          <Link href="/" className="text-text-2 hover:text-text">Home</Link>
-          <Link href="/login" className="px-4 py-2 border border-border-2 text-text hover:border-gold hover:text-gold transition-colors">Sign in</Link>
-        </nav>
-      </header>
+    <main style={{ background: BG, minHeight: "100vh", padding: "80px 40px", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
 
-      <section className="px-6 md:px-10 pt-24 pb-20 max-w-5xl mx-auto">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-gold">Pricing</p>
-        <h1 className="mt-6 font-display text-5xl md:text-6xl text-text font-light leading-tight">
-          Two tiers.<br />Both unlimited.
-        </h1>
-        <p className="mt-8 max-w-2xl text-lg text-text-2 leading-relaxed">
-          Pricing built around a single principle: contract review should cost less than the smallest decision it informs.
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <Link href="/" style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: TEXT_3, textDecoration: "none" }}>
+          ← LexAnchor
+        </Link>
+
+        <p style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: TEXT_2, letterSpacing: "0.22em", textTransform: "uppercase", margin: "24px 0 12px" }}>
+          Pricing
         </p>
-      </section>
+        <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 44, fontWeight: 700, color: TEXT_1, letterSpacing: "-0.025em", lineHeight: 1.1, marginBottom: 14 }}>
+          Senior-attorney review.<br /><span style={{ color: PURPLE_LIGHT }}>One flat rate.</span>
+        </h1>
+        <p style={{ fontSize: 16, color: TEXT_2, marginBottom: 52, maxWidth: 560, lineHeight: 1.7, fontWeight: 300 }}>
+          Every plan includes P0/P1/P2 risk prioritization, plain-English summaries, and unlimited contract types. First contract is free — no credit card.
+        </p>
 
-      <section className="px-6 md:px-10 pb-20 max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border">
-          <PricingCard
-            tier="Individual"
-            price="$15"
-            tagline="Personal contracts. Job offers. Apartment leases."
-            features={[
-              "Unlimited analyses",
-              "All document types",
-              "Plain-English summaries",
-              "Red flag prioritization (P0 / P1 / P2)",
-              "Negotiation hints",
-              "PDF export",
-              "Clause library"
-            ]}
-            cta={{ label: "Start individual", href: "/login" }}
-          />
-          <PricingCard
-            tier="Business"
-            price="$49"
-            tagline="Vendor contracts. SOWs. NDAs. Hiring agreements."
-            features={[
-              "Everything in Individual",
-              "5 user seats",
-              "Team-shared clause library",
-              "Side-by-side document compare",
-              "Custom clause flagging rules",
-              "API access",
-              "Priority processing",
-              "Negotiation playbook export"
-            ]}
-            cta={{ label: "Start business", href: "/login" }}
-            highlighted
-          />
-        </div>
-      </section>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 24 }}>
+          {tiers.map((tier) => (
+            <div
+              key={tier.name}
+              style={{
+                background: tier.featured ? "linear-gradient(165deg, #0d0c22, #09071a)" : SURFACE,
+                border: tier.featured ? `1px solid ${PURPLE}55` : "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 12,
+                padding: "28px 24px",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative"
+              }}
+            >
+              {tier.featured && (
+                <div style={{ position: "absolute", top: -11, left: 24, background: PURPLE, color: TEXT_1, fontFamily: "JetBrains Mono, monospace", fontSize: 9, padding: "3px 12px", borderRadius: 20, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500 }}>
+                  Most popular
+                </div>
+              )}
 
-      <section className="border-t border-border bg-surface">
-        <div className="max-w-5xl mx-auto px-6 md:px-10 py-20">
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-text-3 mb-3">FAQ</p>
-          <h2 className="font-display text-3xl md:text-4xl text-text font-light mb-12">Common questions</h2>
-          <div className="space-y-px bg-border">
-            {FAQ.map((item) => (
-              <details key={item.q} className="group bg-bg p-6">
-                <summary className="cursor-pointer flex items-center justify-between text-text font-display text-lg">
-                  <span>{item.q}</span>
-                  <span className="text-gold font-mono text-xl group-open:rotate-45 transition-transform">+</span>
-                </summary>
-                <p className="mt-4 text-text-2 leading-relaxed">{item.a}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
+              <p style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: TEXT_2, letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 12 }}>
+                {tier.name}
+              </p>
+              <p style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 32, fontWeight: 500, color: TEXT_1, lineHeight: 1, marginBottom: 4 }}>
+                {tier.price}
+                <sub style={{ fontSize: 12, color: TEXT_2 }}> /mo</sub>
+              </p>
+              <p style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: TEXT_2, marginBottom: 22 }}>
+                {tier.term}
+              </p>
 
-      <section className="border-t border-border">
-        <div className="max-w-5xl mx-auto px-6 md:px-10 py-16 text-center">
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-gold mb-4">Disclosure</p>
-          <p className="font-display text-xl md:text-2xl text-text font-light italic max-w-3xl mx-auto leading-relaxed">
-            LexAnchor provides information only — not legal advice. Material decisions warrant attorney review.
-          </p>
-        </div>
-      </section>
+              <ul style={{ listStyle: "none", padding: 0, flex: 1, marginBottom: 22 }}>
+                {tier.features.map((f) => (
+                  <li
+                    key={f}
+                    style={{ fontSize: 12, color: TEXT_2, padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", display: "flex", gap: 8, lineHeight: 1.5 }}
+                  >
+                    <span style={{ color: PURPLE_LIGHT, flexShrink: 0 }}>—</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
 
-      <footer className="border-t border-border px-6 md:px-10 py-10">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="font-display text-lg text-text">LexAnchor</p>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-xs text-text-3 font-mono">
-            <span>lexanchor.ai</span>
-            <span>support@lexanchor.ai</span>
-            <span>© 2026 Apex Empire</span>
-          </div>
+              <Link
+                href={tier.cta.href}
+                style={{
+                  display: "block",
+                  textAlign: "center",
+                  padding: 12,
+                  borderRadius: 6,
+                  fontFamily: "Syne, sans-serif",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  background: tier.cta.style === "primary" ? PURPLE : "transparent",
+                  color: TEXT_1,
+                  border: tier.cta.style === "outline" ? "1px solid rgba(255,255,255,0.12)" : "none"
+                }}
+              >
+                {tier.cta.text}
+              </Link>
+            </div>
+          ))}
         </div>
-      </footer>
+
+        <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: TEXT_2, padding: "13px 16px", background: "rgba(112,69,232,0.08)", border: `1px solid ${PURPLE}33`, borderRadius: 5, display: "flex", alignItems: "center", gap: 9, marginBottom: 32 }}>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: PURPLE_LIGHT, flexShrink: 0, display: "inline-block" }} />
+          First contract is free — no credit card required. Upload any agreement and see the full P0/P1/P2 report in under 60 seconds.
+        </div>
+
+        <p style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: TEXT_3, lineHeight: 1.7, marginTop: 48 }}>
+          LexAnchor provides information only — not legal advice. Material decisions warrant attorney review.
+          <br />© 2026 LexAnchor · Legal Intelligence
+        </p>
+      </div>
     </main>
-  );
-}
-
-function PricingCard({
-  tier, price, tagline, features, cta, highlighted
-}: {
-  tier: string;
-  price: string;
-  tagline: string;
-  features: string[];
-  cta: { label: string; href: string };
-  highlighted?: boolean;
-}) {
-  return (
-    <div className="bg-bg p-10">
-      <p className={`font-mono text-xs uppercase tracking-[0.25em] mb-5 ${highlighted ? "text-gold" : "text-text-3"}`}>
-        {tier}
-      </p>
-      <p className="font-display text-5xl md:text-6xl text-text font-light">
-        {price}<span className="text-text-2 text-2xl">/mo</span>
-      </p>
-      <p className="mt-3 text-text-2 text-sm leading-relaxed">{tagline}</p>
-      <ul className="mt-8 space-y-3 text-sm text-text">
-        {features.map((f) => (
-          <li key={f} className="flex items-start gap-3">
-            <span className="text-gold">—</span>
-            <span>{f}</span>
-          </li>
-        ))}
-      </ul>
-      <Link
-        href={cta.href}
-        className={`mt-10 inline-flex items-center justify-center w-full px-6 py-3.5 font-medium tracking-wide transition-colors ${
-          highlighted
-            ? "bg-gold text-bg hover:bg-gold-dim"
-            : "border border-border-2 text-text hover:border-gold hover:text-gold"
-        }`}
-      >
-        {cta.label}
-      </Link>
-    </div>
   );
 }
