@@ -36,7 +36,7 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative px-6 md:px-10 pt-24 md:pt-32 pb-20 max-w-6xl mx-auto">
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-gold">
-          AI Legal Intelligence
+          Legal Intelligence
         </p>
         <h1 className="mt-8 font-display font-light text-5xl sm:text-6xl md:text-7xl tracking-tight text-text leading-[1.05]">
           Your contracts.<br />

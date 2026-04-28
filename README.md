@@ -1,4 +1,4 @@
-# LexAnchor — AI Legal Intelligence
+# LexAnchor — Legal Intelligence
 
 Senior-attorney-grade contract review in 60 seconds. Every clause analyzed, every risk flagged, every term in plain English. **Information only — not legal advice.**
 

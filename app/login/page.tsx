@@ -58,7 +58,7 @@ export default function LoginPage() {
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-gold">LexAnchor</p>
           <h1 className="mt-12 lg:mt-20 font-display text-3xl md:text-4xl font-light text-text leading-[1.1]">
-            AI Legal Intelligence<span className="text-gold">.</span>
+            Legal Intelligence<span className="text-gold">.</span>
           </h1>
           <p className="mt-6 text-text-2 leading-relaxed max-w-md">
             Sign in to upload contracts and run senior-attorney-grade analysis in 60 seconds.
