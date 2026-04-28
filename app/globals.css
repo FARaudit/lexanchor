@@ -1,46 +1,134 @@
 @import "tailwindcss";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
 
-@theme {
-  /* LexAnchor — senior attorney aesthetic */
-  --color-bg: #1A1A2E;
-  --color-surface: #16213E;
-  --color-surface-2: #1F2A4A;
-  --color-border: #2A3656;
-  --color-border-2: #3D4A6E;
-  --color-text: #F8F5F0;
-  --color-text-2: #B8B5AE;
-  --color-text-3: #6E7287;
-  --color-gold: #C9A84C;
-  --color-gold-dim: #8B7034;
-  --color-green: #1D9E75;
-  --color-amber: #BA7517;
-  --color-red: #A32D2D;
-  --color-blue: #185FA5;
+:root {
+  --la-bg:        #0A0A14;
+  --la-surface:   #12121E;
+  --la-surface-2: #1A1A2E;
+  --la-border:    #252540;
+  --la-border-2:  #30305A;
+  --la-text-1:    #F4F4FF;
+  --la-text-2:    #7070A8;
+  --la-text-3:    #404070;
+  --la-accent:    #6C63FF;
+  --la-mid:       #9B8FFF;
+  --la-gain:      #10B981;
+  --la-loss:      #EF4444;
+  --la-warn:      #F59E0B;
 
-  --font-display: var(--font-fraunces), Georgia, serif;
-  --font-body: var(--font-source-serif), Georgia, serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --sans: "Inter", system-ui, sans-serif;
 }
 
-html { font-family: var(--font-body); }
+@theme {
+  /* Tailwind v4 token bridge so all utility classes resolve. */
+  --color-bg: #0A0A14;
+  --color-surface: #12121E;
+  --color-surface-2: #1A1A2E;
+  --color-border: #252540;
+  --color-border-2: #30305A;
+  --color-text: #F4F4FF;
+  --color-text-2: #7070A8;
+  --color-text-3: #404070;
+  --color-accent: #6C63FF;
+  --color-mid: #9B8FFF;
+  --color-blue: #6C63FF;
+  --color-green: #10B981;
+  --color-green-dim: #064E3B;
+  --color-red: #EF4444;
+  --color-red-dim: #7F1D1D;
+  --color-amber: #F59E0B;
+  --color-warn: #F59E0B;
+  --color-gold: #C9A84C;
+  --color-gold-dim: #8B7034;
+
+  --font-display: "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-fraunces: "Inter", system-ui, sans-serif;
+  --font-jetbrains: "JetBrains Mono", ui-monospace, monospace;
+  --font-source-serif: "Inter", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  background: var(--la-bg);
+  color: var(--la-text-1);
+  font-family: var(--sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
 
 body {
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-size: 15px;
-  line-height: 1.65;
+  background: var(--la-bg);
+  color: var(--la-text-1);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-@media (max-width: 640px) { body { font-size: 14px; } }
+@media (max-width: 640px) { body { font-size: 13px; } }
 
-::selection {
-  background: var(--color-gold);
-  color: var(--color-bg);
+::selection { background: var(--la-accent); color: var(--la-text-1); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* Animations — empire-shared */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+@keyframes flash-gain {
+  0%, 100% { color: var(--la-text-1); }
+  50%      { color: var(--la-gain); text-shadow: 0 0 8px var(--la-gain); }
 }
-
+@keyframes flash-loss {
+  0%, 100% { color: var(--la-text-1); }
+  50%      { color: var(--la-loss); text-shadow: 0 0 8px var(--la-loss); }
+}
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1;   transform: scale(1);   }
+  50%      { opacity: 0.5; transform: scale(1.4); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
 @keyframes dotPulse {
   0%, 80%, 100% { opacity: 0.3; }
-  40% { opacity: 1; }
+  40%           { opacity: 1; }
 }
+
+.flash-gain { animation: flash-gain 0.8s ease; }
+.flash-loss { animation: flash-loss 0.8s ease; }
+.slide-in   { animation: slide-in-right 0.3s ease; }
+.pulse-dot  { animation: pulse-dot 1.5s infinite; }
+.count-up   { animation: count-up 0.6s ease both; }
+.blink      { animation: blink-cursor 1s steps(1) infinite; }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--la-surface) 25%, var(--la-surface-2) 50%, var(--la-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--la-bg); }
+::-webkit-scrollbar-thumb { background: var(--la-border-2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--la-text-3); }
