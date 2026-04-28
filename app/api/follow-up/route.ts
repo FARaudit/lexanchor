@@ -4,7 +4,7 @@ import { createServerClient } from "@/lib/supabase-server";
 export const maxDuration = 60;
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-const CLAUDE_MODEL = "claude-sonnet-4-6";
+const CLAUDE_MODEL = "claude-sonnet-4-20250514";
 
 const UPL_DIRECTIVE = `IMPORTANT: You provide INFORMATION ONLY, not legal advice. You are not the user's attorney. Never use phrases like "you should", "I recommend", or "I advise". Frame negotiation suggestions as questions the user can ask their counterparty or attorney. Always note that an attorney review is recommended for material decisions.`;
 
