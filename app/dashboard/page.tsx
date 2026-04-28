@@ -1,174 +1,153 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase-server";
-import SignOutButton from "./signout-button";
+import StreamingText from "@/components/StreamingText";
+
+export const dynamic = "force-dynamic";
 
 interface AnalysisRow {
   id: number;
-  document_type: string | null;
   filename: string | null;
+  document_type: string | null;
   risk_score: number | null;
   recommendation: string | null;
-  status: string | null;
-  created_at: string | null;
+  status: string;
+  created_at: string;
 }
 
 export default async function DashboardPage() {
-  const supabase = await createServerClient();
+  const sb = await createServerClient();
   const {
     data: { user }
-  } = await supabase.auth.getUser();
+  } = await sb.auth.getUser();
   if (!user) redirect("/login");
 
-  const [totalRes, completeRes, recentRes] = await Promise.all([
-    supabase.from("analyses").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-    supabase.from("analyses").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "complete"),
-    supabase
+  const [{ data: analyses }, { count: clauseCount }, mattersResp] = await Promise.all([
+    sb
       .from("analyses")
-      .select("id, document_type, filename, risk_score, recommendation, status, created_at")
+      .select("id, filename, document_type, risk_score, recommendation, status, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(20)
+      .limit(20),
+    sb.from("saved_clauses").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    sb.from("matters").select("id", { count: "exact", head: true }).eq("user_id", user.id).then(
+      (r) => r,
+      () => ({ count: 0 })
+    )
   ]);
+  const matters = (mattersResp as { count?: number | null }).count ?? 0;
 
-  const recent = (recentRes.data || []) as AnalysisRow[];
+  const list = (analyses ?? []) as AnalysisRow[];
+  const flaggedCount = list.filter((a) => (a.risk_score ?? 0) >= 60).length;
+  const avgRisk = list.length > 0 ? list.reduce((s, a) => s + (a.risk_score ?? 0), 0) / list.length : 0;
+
+  const briefPrompt = `Today's legal intelligence brief for an in-house counsel managing vendor + employment + IP contracts. In 4 bullets:
+1. New regulatory or case-law developments worth monitoring this week
+2. Contract risk trends Claude expects across vendor agreements right now
+3. One area to audit in the saved-clause library this week
+4. One actionable next step for the day
+
+No preamble. Bullets only. Each ≤25 words.`;
 
   return (
     <div className="min-h-screen">
       <header className="border-b border-border px-6 md:px-10 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="font-display text-2xl text-text">LexAnchor</Link>
-          <nav className="hidden md:flex gap-6 text-sm text-text-2">
-            <Link href="/dashboard" className="text-text">Dashboard</Link>
-            <Link href="/analyze" className="hover:text-text">Analyze</Link>
-            <Link href="/clause-library" className="hover:text-text">Clause Library</Link>
-          </nav>
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-accent mb-1">Dashboard</p>
+          <h1 className="font-display text-3xl text-text font-medium">LexAnchor command</h1>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-text-3 font-mono uppercase tracking-wider">Signed in as</p>
-          <p className="text-sm text-text">{user.email}</p>
-          <SignOutButton />
-        </div>
+        <Link
+          href="/analyze"
+          className="bg-accent text-bg px-4 py-2 text-sm font-medium tracking-wide hover:bg-mid"
+        >
+          + New analysis
+        </Link>
       </header>
 
-      <main className="px-6 md:px-10 py-12 md:py-16 max-w-6xl mx-auto">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-gold mb-4">Library</p>
-        <h1 className="font-display text-4xl md:text-5xl text-text font-light">Dashboard</h1>
-        <p className="mt-3 text-text-2">Recent analyses · upload a new document below</p>
+      <main className="px-6 md:px-10 py-8 max-w-7xl mx-auto space-y-10">
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border">
+          <Stat label="Documents Analyzed" value={String(list.length)} sub="Recent 20 shown" />
+          <Stat label="Clauses Saved" value={String(clauseCount ?? 0)} sub="Personal library" />
+          <Stat label="Risks Flagged" value={String(flaggedCount)} tone="red" sub="Score ≥ 60" />
+          <Stat label="Active Matters" value={String(matters ?? 0)} sub="Open" />
+        </section>
 
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-px bg-border">
-          <Metric label="Total Analyses" value={totalRes.count ?? 0} />
-          <Metric label="Completed" value={completeRes.count ?? 0} accent="gold" />
-        </div>
-
-        {/* Upload CTA */}
-        <div className="mt-14 border border-gold/30 bg-gold/5 p-8 flex items-center justify-between gap-6 flex-wrap">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.3em] text-gold mb-2">Action</p>
-            <p className="font-display text-2xl text-text font-light">Analyze a new document</p>
-            <p className="mt-2 text-sm text-text-2">PDF only · ≤10 MB · ~60 seconds</p>
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-accent mb-3">Morning Brief</p>
+            <StreamingText prompt={briefPrompt} emptyState="ANTHROPIC_API_KEY not set — brief unavailable." />
           </div>
-          <Link
-            href="/analyze"
-            className="inline-flex items-center justify-center px-8 py-4 bg-gold text-bg font-medium tracking-wide hover:bg-gold-dim transition-colors whitespace-nowrap"
-          >
-            Upload document
-          </Link>
-        </div>
+          <div className="border border-border bg-surface p-5">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-text-3 mb-3">Risk exposure</p>
+            <p className="font-display text-5xl text-text font-light">
+              {Math.round(avgRisk)}<span className="text-text-3 text-2xl">/100</span>
+            </p>
+            <p className="mt-2 text-text-3 text-xs">Average risk across {list.length} analyses.</p>
+          </div>
+        </section>
 
-        {/* Recent analyses */}
-        <div className="mt-16">
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-text-3 mb-2">Recent</p>
-          <h2 className="font-display text-2xl md:text-3xl text-text font-light mb-8">Your analyses</h2>
-
-          {recent.length === 0 ? (
-            <div className="border border-border bg-surface p-16 text-center">
-              <p className="font-display text-xl text-text-2">No analyses yet.</p>
-              <p className="text-sm text-text-3 mt-2 mb-6">Upload your first contract to see findings here.</p>
-              <Link
-                href="/analyze"
-                className="inline-block px-8 py-3 bg-gold text-bg font-medium hover:bg-gold-dim transition-colors"
-              >
-                Analyze your first document
-              </Link>
-            </div>
+        <section>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-text-3 mb-3">Recent analyses</p>
+          {list.length === 0 ? (
+            <p className="text-text-3 italic text-sm">No analyses yet — drop your first clause.</p>
           ) : (
-            <div className="border border-border">
-              {recent.map((a) => <FeedRow key={a.id} analysis={a} />)}
+            <div className="border border-border bg-surface overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-surface-2 text-text-3">
+                  <tr>
+                    <th className="text-left px-4 py-2 text-[10px] uppercase tracking-[0.18em] font-normal">Document</th>
+                    <th className="text-left px-4 py-2 text-[10px] uppercase tracking-[0.18em] font-normal">Type</th>
+                    <th className="text-right px-4 py-2 text-[10px] uppercase tracking-[0.18em] font-normal">Risk</th>
+                    <th className="text-left px-4 py-2 text-[10px] uppercase tracking-[0.18em] font-normal">Recommendation</th>
+                    <th className="text-left px-4 py-2 text-[10px] uppercase tracking-[0.18em] font-normal">Status</th>
+                    <th className="text-right px-4 py-2 text-[10px] uppercase tracking-[0.18em] font-normal" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {list.map((a) => (
+                    <tr key={a.id} className="border-t border-border hover:bg-surface-2">
+                      <td className="px-4 py-2 text-text text-xs truncate max-w-[28ch]">{a.filename || "Untitled"}</td>
+                      <td className="px-4 py-2">
+                        {a.document_type ? (
+                          <span className="text-[10px] tracking-[0.18em] uppercase border border-accent/40 text-accent px-2 py-0.5">
+                            {a.document_type}
+                          </span>
+                        ) : (
+                          <span className="text-text-3">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2 text-text text-right font-mono">{a.risk_score ?? "—"}</td>
+                      <td className="px-4 py-2 text-xs">
+                        {a.recommendation === "SIGN" && <span className="text-green">Sign</span>}
+                        {a.recommendation === "NEGOTIATE" && <span className="text-warn">Negotiate</span>}
+                        {a.recommendation === "DO_NOT_SIGN" && <span className="text-red">Do Not Sign</span>}
+                        {!a.recommendation && <span className="text-text-3">—</span>}
+                      </td>
+                      <td className="px-4 py-2 text-xs text-text-3 uppercase">{a.status}</td>
+                      <td className="px-4 py-2 text-right">
+                        <Link href={`/analyze/${a.id}`} className="text-xs text-accent hover:text-mid">
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
-        </div>
-
-        {/* Daily intel link */}
-        <div className="mt-16 mb-8 border border-border bg-surface p-6 flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-gold mb-2 font-mono">Daily Brief</p>
-            <p className="font-display text-xl text-text">Today&apos;s LexAnchor digest</p>
-          </div>
-          <a
-            href="https://www.notion.so/34efaf5b931481efa727ca963c744339"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gold hover:text-gold-dim text-sm font-mono"
-          >
-            Read in Notion →
-          </a>
-        </div>
-
-        <p className="mt-8 text-xs text-text-3 font-mono italic">
-          LexAnchor provides information only — not legal advice. Material decisions warrant attorney review.
-        </p>
+        </section>
       </main>
     </div>
   );
 }
 
-function Metric({ label, value, accent }: { label: string; value: number; accent?: "gold" }) {
+function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "red" | "green" }) {
+  const color = tone === "red" ? "text-red" : tone === "green" ? "text-green" : "text-text";
   return (
-    <div className="bg-surface px-8 py-10">
-      <p className="text-xs uppercase tracking-[0.2em] text-text-3 font-mono">{label}</p>
-      <p className={`mt-5 font-display text-5xl md:text-6xl font-light tracking-tight ${accent === "gold" ? "text-gold" : "text-text"}`}>
-        {value}
-      </p>
+    <div className="bg-surface px-5 py-5">
+      <p className="text-[11px] uppercase tracking-[0.2em] text-text-3">{label}</p>
+      <p className={`mt-2 font-mono text-3xl ${color}`}>{value}</p>
+      {sub && <p className="mt-1 text-[10px] text-text-3">{sub}</p>}
     </div>
-  );
-}
-
-function FeedRow({ analysis }: { analysis: AnalysisRow }) {
-  const score = analysis.risk_score;
-  let scoreColor = "text-text-3 border-text-3/40";
-  if (typeof score === "number") {
-    if (score < 35) scoreColor = "text-green border-green";
-    else if (score < 70) scoreColor = "text-amber border-amber";
-    else scoreColor = "text-red border-red";
-  }
-
-  const isPending = analysis.status === "processing" || analysis.status === "pending";
-  const isFailed = analysis.status === "failed";
-
-  return (
-    <Link
-      href={`/analyze/${analysis.id}`}
-      className="group flex items-center justify-between gap-6 bg-surface hover:bg-surface-2 px-6 py-5 border-b border-border last:border-b-0 transition-colors"
-    >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3">
-          <p className="font-mono text-xs text-gold tracking-wider uppercase">
-            {analysis.document_type || "Document"}
-          </p>
-          {isPending && <span className="font-mono text-xs text-amber uppercase">processing</span>}
-          {isFailed && <span className="font-mono text-xs text-red uppercase">failed</span>}
-        </div>
-        <p className="mt-1.5 text-text truncate font-display text-lg">{analysis.filename || "Untitled"}</p>
-        <p className="mt-1 text-xs text-text-2 font-mono">
-          {analysis.recommendation && analysis.recommendation.replace(/_/g, " ")}
-          {analysis.created_at && ` · ${new Date(analysis.created_at).toLocaleDateString()}`}
-        </p>
-      </div>
-
-      <div className={`flex items-center justify-center w-14 h-14 rounded-full border-2 ${scoreColor} font-display text-xl`}>
-        {typeof score === "number" ? score : "—"}
-      </div>
-    </Link>
   );
 }
