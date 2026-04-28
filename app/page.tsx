@@ -1,5 +1,5 @@
 import Link from "next/link";
-import WaitlistForm from "./_components/waitlist-form";
+import SignupForm from "./_components/signup-form";
 
 const DOC_TYPES = [
   { label: "Employment Offer", body: "Compensation, equity vesting, non-compete scope, IP assignment, severance triggers." },
@@ -47,7 +47,7 @@ export default function LandingPage() {
           LexAnchor analyzes every clause, flags every risk, explains every term — in plain English.
         </p>
         <div className="mt-12">
-          <WaitlistForm />
+          <SignupForm />
         </div>
         <div className="mt-20 h-px bg-gradient-to-r from-gold via-gold-dim to-transparent" />
       </section>
