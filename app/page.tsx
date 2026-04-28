@@ -130,8 +130,11 @@ export default function LandingPage() {
           <p className="font-display text-lg text-text">LexAnchor</p>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-xs text-text-3 font-mono">
             <span>lexanchor.ai</span>
-            <span>jose@lexanchor.ai</span>
-            <span>© 2026 Apex Empire · Information only, not legal advice.</span>
+            <a href="mailto:jose@lexanchor.ai" className="hover:text-text">jose@lexanchor.ai</a>
+            <Link href="/privacy" className="hover:text-text">Privacy</Link>
+            <Link href="/terms" className="hover:text-text">Terms</Link>
+            <span>© 2026 LexAnchor Inc.</span>
+            <span>Information only, not legal advice.</span>
           </div>
         </div>
       </footer>
