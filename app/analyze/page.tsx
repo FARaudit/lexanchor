@@ -6,18 +6,25 @@ import Link from "next/link";
 
 const DOC_TYPES = [
   "",
-  "Employment offer",
-  "Lease",
   "NDA",
+  "Service Agreement",
+  "Employment offer",
+  "IP Assignment",
+  "Vendor Contract",
+  "Government Contract",
+  "Lease",
   "Freelance contract",
   "Terms of Service",
-  "Service agreement",
   "Other"
 ];
 
+type Mode = "upload" | "paste";
+
 export default function AnalyzePage() {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>("upload");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pasteText, setPasteText] = useState("");
   const [docType, setDocType] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,18 +49,30 @@ export default function AnalyzePage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!pdfFile) {
+    if (mode === "upload" && !pdfFile) {
       setError("Upload a PDF first.");
+      return;
+    }
+    if (mode === "paste" && pasteText.trim().length < 80) {
+      setError("Paste at least 80 characters of clause text.");
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
-      const formData = new FormData();
-      formData.append("pdf", pdfFile);
-      if (docType) formData.append("document_type", docType);
-
-      const res = await fetch("/api/analyze", { method: "POST", body: formData });
+      let res: Response;
+      if (mode === "upload" && pdfFile) {
+        const formData = new FormData();
+        formData.append("pdf", pdfFile);
+        if (docType) formData.append("document_type", docType);
+        res = await fetch("/api/analyze", { method: "POST", body: formData });
+      } else {
+        res = await fetch("/api/analyze/text", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: pasteText, document_type: docType || undefined })
+        });
+      }
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Analysis failed");
@@ -99,6 +118,21 @@ export default function AnalyzePage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="mt-12 space-y-6">
+              <div className="inline-flex border border-border" role="tablist">
+                {(["upload", "paste"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMode(m)}
+                    className={`px-4 py-2 text-xs uppercase tracking-[0.18em] ${
+                      mode === m ? "bg-accent text-bg" : "text-text-3 hover:text-text"
+                    }`}
+                  >
+                    {m === "upload" ? "Upload PDF" : "Paste text"}
+                  </button>
+                ))}
+              </div>
+
               <div>
                 <label className="block text-xs uppercase tracking-[0.2em] text-text-3 mb-3 font-mono">
                   Document type (optional)
@@ -106,7 +140,7 @@ export default function AnalyzePage() {
                 <select
                   value={docType}
                   onChange={(e) => setDocType(e.target.value)}
-                  className="w-full bg-bg border border-border text-text px-4 py-3.5 focus:outline-none focus:border-gold transition-colors font-body"
+                  className="w-full bg-bg border border-border text-text px-4 py-3.5 focus:outline-none focus:border-accent transition-colors"
                 >
                   {DOC_TYPES.map((t) => (
                     <option key={t} value={t}>{t || "— Auto-detect —"}</option>
@@ -114,6 +148,21 @@ export default function AnalyzePage() {
                 </select>
               </div>
 
+              {mode === "paste" ? (
+                <div>
+                  <label className="block text-xs uppercase tracking-[0.2em] text-text-3 mb-3 font-mono">
+                    Clause text
+                  </label>
+                  <textarea
+                    rows={12}
+                    value={pasteText}
+                    onChange={(e) => setPasteText(e.target.value)}
+                    placeholder="Paste a clause, section, or full agreement here…"
+                    className="w-full bg-bg border border-border text-text px-4 py-3 font-mono text-xs focus:outline-none focus:border-accent transition-colors"
+                  />
+                  <p className="mt-2 text-[11px] text-text-3">{pasteText.length} chars</p>
+                </div>
+              ) : (
               <div>
                 <label className="block text-xs uppercase tracking-[0.2em] text-text-3 mb-3 font-mono">
                   PDF
@@ -124,7 +173,7 @@ export default function AnalyzePage() {
                   onDragEnter={(e) => handleDrag(e, true)}
                   onDragLeave={(e) => handleDrag(e, false)}
                   className={`border-2 border-dashed transition-colors px-6 py-12 text-center ${
-                    dragActive ? "border-gold bg-gold/5" : "border-border bg-surface/40 hover:border-border-2"
+                    dragActive ? "border-accent bg-accent/5" : "border-border bg-surface/40 hover:border-border-2"
                   }`}
                 >
                   {pdfFile ? (
@@ -145,17 +194,18 @@ export default function AnalyzePage() {
                           className="hidden"
                           onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
                         />
-                        <span className="text-gold underline hover:text-gold-dim">browse files</span>
+                        <span className="text-accent underline hover:text-mid">browse files</span>
                       </label>
                     </>
                   )}
                 </div>
               </div>
+              )}
 
               <button
                 type="submit"
-                disabled={!pdfFile}
-                className="w-full bg-gold text-bg py-4 font-medium tracking-wide hover:bg-gold-dim disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                disabled={mode === "upload" ? !pdfFile : pasteText.trim().length < 80}
+                className="w-full bg-accent text-bg py-4 font-medium tracking-wide hover:bg-mid disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Run analysis
               </button>
