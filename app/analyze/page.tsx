@@ -1,226 +1,77 @@
-"use client";
+import type { Metadata } from "next";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+export const metadata: Metadata = {
+  title: "Analyze Contract — LexAnchor Legal Intelligence",
+  description: "Upload any contract and get P0/P1/P2 risk classification, plain English explanations, and negotiation scripts in seconds."
+};
 
-const DOC_TYPES = [
-  "",
-  "NDA",
-  "Service Agreement",
-  "Employment offer",
-  "IP Assignment",
-  "Vendor Contract",
-  "Government Contract",
-  "Lease",
-  "Freelance contract",
-  "Terms of Service",
-  "Other"
+const TRAPS = [
+  { clause: "IP ownership — pre-existing work", detail: '"All work product created during the engagement, including pre-existing work, is assigned to Client."' },
+  { clause: "Auto-renewal trap", detail: '"This agreement shall automatically renew for successive one-year terms unless cancelled 60 days prior."' },
+  { clause: "Personal guarantee", detail: '"Signatory agrees to be personally liable for all obligations of the contracting entity."' },
+  { clause: "Overly broad non-compete", detail: '"Signatory agrees not to work in a competing capacity within 50 miles for 24 months."' }
 ];
 
-type Mode = "upload" | "paste";
-
 export default function AnalyzePage() {
-  const router = useRouter();
-  const [mode, setMode] = useState<Mode>("upload");
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pasteText, setPasteText] = useState("");
-  const [docType, setDocType] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [dragActive, setDragActive] = useState(false);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type === "application/pdf") {
-      setPdfFile(file);
-      setError(null);
-    } else if (file) {
-      setError("Only PDF files are accepted.");
-    }
-  }, []);
-
-  const handleDrag = useCallback((e: React.DragEvent, active: boolean) => {
-    e.preventDefault();
-    setDragActive(active);
-  }, []);
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (mode === "upload" && !pdfFile) {
-      setError("Upload a PDF first.");
-      return;
-    }
-    if (mode === "paste" && pasteText.trim().length < 80) {
-      setError("Paste at least 80 characters of clause text.");
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    try {
-      let res: Response;
-      if (mode === "upload" && pdfFile) {
-        const formData = new FormData();
-        formData.append("pdf", pdfFile);
-        if (docType) formData.append("document_type", docType);
-        res = await fetch("/api/analyze", { method: "POST", body: formData });
-      } else {
-        res = await fetch("/api/analyze/text", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: pasteText, document_type: docType || undefined })
-        });
-      }
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Analysis failed");
-        setSubmitting(false);
-        return;
-      }
-      router.push(`/analyze/${data.analysisId}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
-      setSubmitting(false);
-    }
-  }
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border px-6 md:px-10 py-5 flex items-center justify-between">
-        <Link href="/" className="font-display text-2xl text-text">LexAnchor</Link>
-        <Link href="/dashboard" className="text-sm text-text-2 hover:text-text font-mono uppercase tracking-wider">
-          Dashboard
-        </Link>
-      </header>
-
-      <main className="flex-1 flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-xl">
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-gold mb-3">Analyze</p>
-          <h1 className="font-display text-4xl md:text-5xl text-text font-light">Upload a document</h1>
-          <p className="mt-4 text-text-2 leading-relaxed">
-            We&apos;ll run three parallel calls — <span className="text-text">overview</span>, <span className="text-text">every clause</span>, and <span className="text-text">every red flag</span> — and return a plain-English report in about 60 seconds.
-          </p>
-
-          {submitting ? (
-            <div className="mt-14 border border-gold/40 bg-gold/5 p-12 text-center">
-              <div className="inline-flex gap-2 mb-8">
-                <span className="w-2.5 h-2.5 bg-gold rounded-full" style={{ animation: "dotPulse 1.4s infinite", animationDelay: "0ms" }} />
-                <span className="w-2.5 h-2.5 bg-gold rounded-full" style={{ animation: "dotPulse 1.4s infinite", animationDelay: "200ms" }} />
-                <span className="w-2.5 h-2.5 bg-gold rounded-full" style={{ animation: "dotPulse 1.4s infinite", animationDelay: "400ms" }} />
-              </div>
-              <p className="font-display text-2xl text-text">Reading every clause</p>
-              <p className="mt-3 text-text-2 text-sm font-mono uppercase tracking-wider">
-                Overview · Clauses · Risks
-              </p>
-              <p className="mt-2 text-text-3 text-xs">~60 seconds</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="mt-12 space-y-6">
-              <div className="inline-flex border border-border" role="tablist">
-                {(["upload", "paste"] as const).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setMode(m)}
-                    className={`px-4 py-2 text-xs uppercase tracking-[0.18em] ${
-                      mode === m ? "bg-accent text-bg" : "text-text-3 hover:text-text"
-                    }`}
-                  >
-                    {m === "upload" ? "Upload PDF" : "Paste text"}
-                  </button>
-                ))}
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-[0.2em] text-text-3 mb-3 font-mono">
-                  Document type (optional)
-                </label>
-                <select
-                  value={docType}
-                  onChange={(e) => setDocType(e.target.value)}
-                  className="w-full bg-bg border border-border text-text px-4 py-3.5 focus:outline-none focus:border-accent transition-colors"
-                >
-                  {DOC_TYPES.map((t) => (
-                    <option key={t} value={t}>{t || "— Auto-detect —"}</option>
-                  ))}
-                </select>
-              </div>
-
-              {mode === "paste" ? (
-                <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-text-3 mb-3 font-mono">
-                    Clause text
-                  </label>
-                  <textarea
-                    rows={12}
-                    value={pasteText}
-                    onChange={(e) => setPasteText(e.target.value)}
-                    placeholder="Paste a clause, section, or full agreement here…"
-                    className="w-full bg-bg border border-border text-text px-4 py-3 font-mono text-xs focus:outline-none focus:border-accent transition-colors"
-                  />
-                  <p className="mt-2 text-[11px] text-text-3">{pasteText.length} chars</p>
-                </div>
-              ) : (
-              <div>
-                <label className="block text-xs uppercase tracking-[0.2em] text-text-3 mb-3 font-mono">
-                  PDF
-                </label>
-                <div
-                  onDrop={handleDrop}
-                  onDragOver={(e) => handleDrag(e, true)}
-                  onDragEnter={(e) => handleDrag(e, true)}
-                  onDragLeave={(e) => handleDrag(e, false)}
-                  className={`border-2 border-dashed transition-colors px-6 py-12 text-center ${
-                    dragActive ? "border-accent bg-accent/5" : "border-border bg-surface/40 hover:border-border-2"
-                  }`}
-                >
-                  {pdfFile ? (
-                    <div>
-                      <p className="font-mono text-sm text-text">{pdfFile.name}</p>
-                      <p className="text-text-3 text-xs mt-2 font-mono">{(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                      <button type="button" onClick={() => setPdfFile(null)} className="mt-4 text-xs text-text-3 underline hover:text-text-2 font-mono">
-                        Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-text-2 text-sm">Drop a PDF here or</p>
-                      <label className="inline-block mt-2 cursor-pointer">
-                        <input
-                          type="file"
-                          accept="application/pdf,.pdf"
-                          className="hidden"
-                          onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
-                        />
-                        <span className="text-accent underline hover:text-mid">browse files</span>
-                      </label>
-                    </>
-                  )}
-                </div>
-              </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={mode === "upload" ? !pdfFile : pasteText.trim().length < 80}
-                className="w-full bg-accent text-bg py-4 font-medium tracking-wide hover:bg-mid disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Run analysis
-              </button>
-
-              {error && (
-                <div className="border-l-2 border-red bg-red/5 p-4 text-sm text-red">{error}</div>
-              )}
-            </form>
-          )}
-
-          <p className="mt-10 text-xs text-text-3 leading-relaxed italic">
-            LexAnchor provides information only. Not legal advice. Not a substitute for an attorney.
+    <main style={{ minHeight: "100vh", background: "#1A1A2E", color: "#e2e8f2", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <div style={{ maxWidth: "860px", margin: "0 auto", padding: "40px 24px" }}>
+        <div style={{ marginBottom: "32px" }}>
+          <div style={{ fontSize: "11px", color: "#C4B5FD", letterSpacing: ".12em", textTransform: "uppercase", fontWeight: 700, marginBottom: "8px" }}>
+            Contract Analysis
+          </div>
+          <h1 style={{ fontSize: "28px", fontWeight: 700, color: "#e2e8f2", marginBottom: "8px" }}>Paste or upload any contract</h1>
+          <p style={{ fontSize: "14px", color: "#6b6b8a", lineHeight: 1.7 }}>
+            LexAnchor reads every clause, classifies each as P0 (do not sign), P1 (negotiate), or P2 (understand and accept), and gives you the exact negotiation language for every flag.
           </p>
         </div>
-      </main>
-    </div>
+
+        <div style={{ background: "#0F0F1E", border: "1px dashed #4C1D95", borderRadius: "12px", padding: "48px 24px", textAlign: "center", marginBottom: "24px" }}>
+          <div style={{ fontSize: "32px", marginBottom: "12px" }}>📄</div>
+          <div style={{ fontSize: "15px", fontWeight: 600, color: "#e2e8f2", marginBottom: "6px" }}>Drop your contract here</div>
+          <div style={{ fontSize: "13px", color: "#6b6b8a", marginBottom: "20px" }}>PDF, Word, or plain text · Up to 50 pages</div>
+          <a
+            href="/signup"
+            style={{ display: "inline-block", padding: "10px 24px", background: "#6C63FF", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer", marginRight: "10px", textDecoration: "none" }}
+          >
+            Upload contract
+          </a>
+          <a
+            href="/signup"
+            style={{ display: "inline-block", padding: "10px 24px", background: "transparent", border: ".5px solid #4C1D95", color: "#C4B5FD", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer", textDecoration: "none" }}
+          >
+            Paste text
+          </a>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "24px" }}>
+          {[
+            { label: "P0 FLAGS", color: "#EF4444", desc: "Do not sign without removing or rewriting these clauses" },
+            { label: "P1 FLAGS", color: "#F59E0B", desc: "Negotiate these before signing — scripts provided" },
+            { label: "P2 FLAGS", color: "#10B981", desc: "Understand and accept — plain English explanation" }
+          ].map((f) => (
+            <div key={f.label} style={{ background: "#0F0F1E", border: `.5px solid ${f.color}40`, borderRadius: "8px", padding: "14px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: f.color, letterSpacing: ".08em", marginBottom: "6px" }}>{f.label}</div>
+              <div style={{ fontSize: "12px", color: "#6b6b8a", lineHeight: 1.55 }}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ background: "#0F0F1E", border: ".5px solid #2D1B69", borderRadius: "10px", padding: "20px" }}>
+          <div style={{ fontSize: "11px", color: "#6b6b8a", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".08em", marginBottom: "14px" }}>
+            Most common P0 flags LexAnchor catches
+          </div>
+          {TRAPS.map((t) => (
+            <div key={t.clause} style={{ padding: "10px 0", borderBottom: ".5px solid #2D1B69" }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "3px" }}>
+                <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "3px", background: "rgba(239,68,68,.15)", color: "#EF4444", fontWeight: 700 }}>P0</span>
+                <span style={{ fontSize: "13px", fontWeight: 600, color: "#e2e8f2" }}>{t.clause}</span>
+              </div>
+              <div style={{ fontSize: "11px", color: "#6b6b8a", fontStyle: "italic", paddingLeft: "36px", lineHeight: 1.5 }}>{t.detail}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }
